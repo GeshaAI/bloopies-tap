@@ -1,0 +1,6 @@
+# Generated Android signing material and export output.
+# Never commit keystores, including this disposable CI debug key.
+debug.keystore
+*.jks
+*.keystore
+build/
