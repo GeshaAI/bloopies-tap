@@ -122,11 +122,13 @@ No PC is required:
 1. Upload/push this repository to GitHub from a browser or Android Git client.
 2. Open the repository's **Actions** tab.
 3. Select **Build Android APK** and tap **Run workflow** (pushes and pull requests also build automatically).
-4. The workflow installs Java 17 and Godot **4.4.1** with matching export templates. It creates an ephemeral `debug.keystore` in the project root with alias `androiddebugkey` and the standard non-production debug password, verifies that key, validates all three Godot 4.4 signing fields, performs a headless import, and exports the package `com.bloopiesworld.bloopiestap`.
+4. The workflow installs Java 17, Godot **4.4.1** with matching export templates, and the Android 35 platform, Build Tools 35.0.0, and Platform Tools. It writes Godot's editor settings with the detected Android SDK and Java SDK paths, creates an ephemeral `debug.keystore` in the project root with alias `androiddebugkey` and the standard non-production debug password, verifies the key and complete preset, performs a verbose headless import, and exports the package `com.bloopiesworld.bloopiestap`.
 5. Open the completed workflow run, scroll to **Artifacts**, and download **`Bloopies-Tap-Android`**.
 6. Unzip it to obtain **`BloopiesTap-debug.apk`**. Android may ask permission to install apps from the browser/files app.
 
 Godot 4.4 requires the `keystore/debug`, `keystore/debug_user`, and `keystore/debug_password` export options to be either all populated or all empty. This repository populates all three for CI: the preset points to the generated project-root `debug.keystore`, while the workflow creates the matching `androiddebugkey` alias with password `android`. The generated key and `build/` directory are ignored by Git. This disposable key is only for debug APKs; production Play Store publishing should use an encrypted repository secret and a permanent release key.
+
+The workflow explicitly configures Godot's `export/android/android_sdk_path` and `export/android/java_sdk_path` editor settings; merely exporting `ANDROID_HOME` is not sufficient for reliable headless preset validation. Before export it prints tool versions and paths, verifies `adb`, `aapt2`, the `apksigner` tool, `android.jar`, the debug keystore, and `android_debug.apk`, and starts only the lightweight ADB server. No emulator is started and no connected device is required to build an APK. Verbose Godot output is enabled so any future preset error includes its underlying tool diagnostics.
 
 ## Asset and performance notes
 
