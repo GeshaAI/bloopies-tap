@@ -1,0 +1,58 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    name: Godot 4.4.1 Android debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Godot 4.4.1 and export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Create Android debug keystore
+        run: |
+          mkdir -p "$HOME/.android" build
+          keytool -genkeypair -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -storepass android -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Import project and verify resources
+        run: godot --headless --editor --path . --quit
+
+      - name: Export debug APK
+        run: godot --headless --path . --export-debug Android build/BloopiesTap-debug.apk
+
+      - name: Verify APK exists
+        run: test -s build/BloopiesTap-debug.apk
+
+      - name: Upload Bloopies Tap Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bloopies-Tap-Android
+          path: build/BloopiesTap-debug.apk
+          if-no-files-found: error
+          retention-days: 30
